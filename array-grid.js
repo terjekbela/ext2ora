@@ -107,7 +107,7 @@ Ext.onReady(function(){
 	    scope: this,
 	    rowclick: function(g,rowIndex,e){
 		var cb = Ext.getCmp('schema_combo');
-		var grid = Ext.getCmp('browser-grid');
+		var grid = Ext.getCmp('row-grid');
 		var akt_schema = cb.getValue();
 		selRec = g.getStore().getAt(rowIndex);
 		
@@ -144,7 +144,7 @@ Ext.onReady(function(){
 	    scope: this,
 	    rowclick: function(g,rowIndex,e){
 		var cb = Ext.getCmp('schema_combo');
-		var grid = Ext.getCmp('browser-grid');
+		var grid = Ext.getCmp('row-grid');
 		var akt_schema = cb.getValue();
 		selRec = g.getStore().getAt(rowIndex);
 		
@@ -197,6 +197,7 @@ Ext.onReady(function(){
         return val;
     }
 
+    // create the Grid
     var grid = new Ext.grid.GridPanel({
         store: grid_store,
 	id : 'row-grid',
@@ -318,8 +319,11 @@ Ext.onReady(function(){
 
     function fillViewGrid(schema){
 	var vg = Ext.getCmp('view-grid');
+        //set and disable cities
         vg.setDisabled(true);
+        //lw.setValue('');
         vg.store.removeAll();
+        //reload region store and enable region 
         vg.store.reload({
             params: { schema: schema, view : 1 }
         });
@@ -347,72 +351,7 @@ Ext.onReady(function(){
     });
 
 
-    var browser_store = new Ext.data.JsonStore({
-	// store configs
-	autoDestroy: true,
-	//autoLoad: true,
-	url: '/ext2ora/load.php',
-	storeId: 'browserStore',
-	messageProperty : 'message',
-        listeners: {
-            'exception': function(m) {
-                //alert(m);
-            }
-        },
-	root: 'rows'
-    });
-
-    var browserGrid = new Ext.grid.GridPanel({
-        store: browser_store,
-	id : 'browser-grid',
-        columns: [
-        ],
-        stripeRows: true,
-        height: 200,
-        width: 600,
-        bbar : new Ext.PagingToolbar({
-            pageSize   : 30,
-            store      : grid_store,
-            displayInfo: true,
-            displayMsg : 'Displaying rows {0} - {1} of {2}',
-            emptyMsg   : 'No rows to display'
-        }),
-        title: 'Data Browser',
-        stateful: true,
-	editable: true
-        //stateId: 'grid'        
-    });
-
-    browser_store.addListener("metachange", function(store, meta){
-	var grid = Ext.getCmp('browser-grid');
-
-	var columns = [];
-	if(meta.fields.length == 1){//ha csak egy mezo van (pl hibauzi), akkor az elfoglalhatja a teljes gridet
-	    grid.view.forceFit = true;
-	} else {
-	    grid.view.forceFit = false;
-	}
-	for (var i = 0; i < meta.fields.length; i++ ) {
-	    /*var plugin = new Ext.grid.CheckColumn({
-		header: meta.fields[i].header,
-		dataIndex: meta.fields[i].name,
-		grid: grid,
-		width: 120 //if we need plugin
-	    });*/
-	    columns.push( { header: meta.fields[i].header, dataIndex: meta.fields[i].name, type: meta.fields[i].type }); //for fields that don't require plugins
-	    
-	    //columns.push(plugin);
-	    //plugin.init(grid);
-
-	//use columns.push( { header: meta.fields[i].header, dataIndex: meta.fields[i].name, type: meta.fields[i].type }); for fields that don't require plugins
-	}
-	grid.reconfigure(browser_store, new Ext.grid.ColumnModel(columns));
-    });
-
-
-
-
-    var schemaTabs = new Ext.TabPanel({
+    var tabs = new Ext.TabPanel({
         width:450,
         activeTab: 0,
         frame:true,
@@ -422,58 +361,26 @@ Ext.onReady(function(){
         ]
     });
 
-
-
-    var sqlPanel = new Ext.Panel({
-    height: 800,
-    items: [
-	{
+new Ext.Viewport({
+    layout: 'border',
+    items: [{
+        region: 'west',
+        layout: 'vbox',
+        width:300,
+        minWidth: 100,
+        maxWidth: 250,
+        items:[
+	combo
+	,tabs
+        ]
+	},{
+	region : 'center',
 	layout : 'vbox',
 	items:[
         exec
 	,sqlwindow
 	,grid
 	]}
-	]
-    });
-
-
-    var browserPanel = new Ext.Panel({
-    height: 800,
-    layout: 'border',
-    items: [
-	{
-    	    region: 'west',
-    	    layout: 'vbox',
-    	    width:300,
-    	    minWidth: 100,
-    	    maxWidth: 250,
-    	    items:[
-		combo
-		,schemaTabs
-    	    ]
-	},{
-	    region : 'center',
-	    layout : 'vbox',
-	    items:[browserGrid
-	    ]
-	}
-	]
-    });
-
-    var mainTabs = new Ext.TabPanel({
-        activeTab: 0,
-        //frame:true,
-	height: 800,
-        defaults:{autoHeight: true},
-        items:[sqlPanel
-            ,browserPanel
-        ]
-    });
-
-new Ext.Viewport({
-    layout: 'auto',
-    items: [mainTabs
     ]});
 
 
